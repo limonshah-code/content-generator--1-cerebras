@@ -26,8 +26,8 @@ jobs:
 
       - name: Run Content Generation Script
         env:
-          GEMINI_API_KEY1: ${{ secrets.GEMINI_API_KEY1 }}
-          GEMINI_API_KEY2: ${{ secrets.GEMINI_API_KEY2 }}
+          CEREBRAS_API_KEY1: ${{ secrets.CEREBRAS_API_KEY1 }}
+          CEREBRAS_API_KEY2: ${{ secrets.CEREBRAS_API_KEY2 }}
           EMAIL_HOST: smtp.gmail.com
           EMAIL_PORT: 587
           EMAIL_USER: limon.working@gmail.com

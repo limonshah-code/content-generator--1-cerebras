@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import axios from 'axios';
-import { GoogleGenAI } from '@google/genai';
+import Cerebras from '@cerebras/cerebras_cloud_sdk';
 import fs from 'fs';
 import path from 'path';
 import nodemailer from 'nodemailer';
@@ -20,24 +20,24 @@ if (!fs.existsSync(GENERATED_DIR)) {
   fs.mkdirSync(GENERATED_DIR, { recursive: true });
 }
 
-// ================= GEMINI MULTI-KEY =================
+// ================= CEREBRAS MULTI-KEY =================
 const apiKeys = Object.keys(process.env)
-  .filter((key) => key.startsWith('GEMINI_API_KEY'))
+  .filter((key) => key.startsWith('CEREBRAS_API_KEY'))
   .sort()
   .map((key) => process.env[key])
   .filter(Boolean) as string[];
 
 if (apiKeys.length === 0) {
-  throw new Error('No GEMINI_API_KEY variables found.');
+  throw new Error('No CEREBRAS_API_KEY variables found.');
 }
 
-console.log(`Loaded ${apiKeys.length} Gemini API keys.`);
+console.log(`Loaded ${apiKeys.length} Cerebras API keys.`);
 
 let keyIndex = 0;
-const getNextGemini = () => {
+const getNextCerebras = () => {
   const key = apiKeys[keyIndex];
   keyIndex = (keyIndex + 1) % apiKeys.length;
-  return new GoogleGenAI({ apiKey: key });
+  return new Cerebras({ apiKey: key });
 };
 
 // ================= SLUG GENERATOR =================
@@ -86,23 +86,34 @@ const generateWithRetry = async (promptText: string, model: string) => {
 
   while (attempt < MAX_RETRIES) {
     try {
-      const ai = getNextGemini();
+      const ai = getNextCerebras();
       await sleep(REQUEST_DELAY);
 
-      const result = await ai.models.generateContent({
+      const completion = await ai.chat.completions.create({
         model,
-        contents: promptText,
-        config: { responseMimeType: 'text/plain' },
+        messages: [
+          { role: 'system', content: '' },
+          { role: 'user', content: promptText }
+        ],
+        stream: false, // We await full text just like the old Gemini code
+        max_completion_tokens: 32768,
+        temperature: 1,
+        top_p: 1,
+        // @ts-ignore - Fallback typing if SDK is outdated regarding this parameter
+        reasoning_effort: "high"
       });
 
-      if (!result.text) throw new Error('Empty response');
-      return result.text;
+      const resultText = completion.choices[0]?.message?.content;
+      if (!resultText) throw new Error('Empty response');
+      return resultText;
 
     } catch (error: any) {
       attempt++;
       console.log(`Retry ${attempt}/${MAX_RETRIES}`);
 
-      if (error?.response?.status === 429) {
+      // Cerebras/OpenAI style error structure check
+      const isRateLimit = error?.status === 429 || error?.response?.status === 429;
+      if (isRateLimit) {
         console.log('Rate limit hit → switching key');
       }
 
@@ -147,7 +158,8 @@ const processFile = async (file: any, model: string) => {
 
 // ================= PARALLEL QUEUE =================
 const runQueue = async (files: any[]) => {
-  const model = process.env.GEMINI_MODEL || 'gemini-3-flash-preview';
+  // Use user-defined model or Cerebras standard default
+  const model = process.env.CEREBRAS_MODEL || 'llama-3.3-70b'; 
   const results: any[] = [];
   let index = 0;
 
@@ -177,7 +189,6 @@ const getFolderStats = (dir: string) => {
 
 // ================= SEND BATCH EMAIL =================
 const sendBatchEmail = async (success: any[], failed: any[]) => {
-  // Bangladesh time
   const now = new Date();
   const dateTimeStr = now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' });
 
@@ -186,7 +197,7 @@ const sendBatchEmail = async (success: any[], failed: any[]) => {
   const subject = `Content Generation Report lawn - ${dateTimeStr} - ${success.length} Success, ${failed.length} Failed`;
 
   const body = `
-Multi-Key Content Generation Report
+Multi-Key Content Generation Report (Cerebras)
 ----------------------------------
 Date & Time (BDT): ${dateTimeStr}
 Total Processed: ${success.length + failed.length}
@@ -241,6 +252,5 @@ const run = async () => {
     process.exit(1);
   }
 };
-
 
 run();
