@@ -159,7 +159,7 @@ const processFile = async (file: any, model: string) => {
 // ================= PARALLEL QUEUE =================
 const runQueue = async (files: any[]) => {
   // Use user-defined model or Cerebras standard default
-  const model = process.env.CEREBRAS_MODEL || 'llama-3.3-70b'; 
+  const model = process.env.CEREBRAS_MODEL || 'gpt-oss-120b'; 
   const results: any[] = [];
   let index = 0;
 
