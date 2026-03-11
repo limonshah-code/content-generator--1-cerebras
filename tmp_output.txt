@@ -1,0 +1,50 @@
+﻿node.exe : C:\Users\WIN
+-11\Desktop\new\content
+-generator--1-cerebras\
+scripts\generate.ts:31
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (C:\Users\WIN-   
+ 11...\generate.ts:    
+31:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+  throw new Error('No 
+CEREBRAS_API_KEY 
+variables found.');
+        ^
+
+Error: No 
+CEREBRAS_API_KEY 
+variables found.
+    at <anonymous> (C:\
+Users\WIN-11\Desktop\ne
+w\content-generator--1-
+cerebras\scripts\genera
+te.ts:31:9)
+    at ModuleJob.run (n
+ode:internal/modules/es
+m/module_job:377:25)
+    at async onImport.t
+racePromise.__proto__ (
+node:internal/modules/e
+sm/loader:691:26)
+    at async asyncRunEn
+tryPointWithESMLoader (
+node:internal/modules/r
+un_main:101:5)
+
+Node.js v24.11.0
